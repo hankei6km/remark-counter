@@ -2,7 +2,7 @@ import { Plugin, Transformer } from 'unified'
 import { Node } from 'unist'
 import { Parent, Root, Text } from 'mdast'
 import { TextDirective, ContainerDirective } from 'mdast-util-directive'
-import { visitParents, CONTINUE, SKIP } from 'unist-util-visit-parents'
+import { visitParents, SKIP } from 'unist-util-visit-parents'
 import toSafeInteger from 'lodash.tosafeinteger'
 
 const directiveName = 'cnt'
@@ -13,10 +13,16 @@ export type SimpleCounterTrigger = { type: string; depth: number }
 export class SimpleCounter {
   private counter: number = 0
   private resetTrigger: SimpleCounterTrigger[] = []
+  private incrementTrigger: SimpleCounterTrigger[] = []
   constructor() {}
   addResetTrigger(t?: SimpleCounterTrigger) {
     if (t) {
       this.resetTrigger.push({ type: t.type, depth: t.depth })
+    }
+  }
+  addIncrementTrigger(t?: SimpleCounterTrigger) {
+    if (t) {
+      this.incrementTrigger.push({ type: t.type, depth: t.depth })
     }
   }
   set(value: number) {
@@ -29,6 +35,17 @@ export class SimpleCounter {
       ) >= 0
     ) {
       this.counter = 0
+      return true
+    }
+    return false
+  }
+  incerement(node: Node): boolean {
+    if (
+      this.incrementTrigger.findIndex(
+        ({ type, depth }) => type === node.type && depth === (node as any).depth
+      ) >= 0
+    ) {
+      this.up()
       return true
     }
     return false
@@ -53,6 +70,13 @@ export class Counter {
       this.counters[name].addResetTrigger(t)
     }
   }
+  addIncrementTrigger(name: string, t?: SimpleCounterTrigger): boolean {
+    if (this.counters[name]) {
+      this.counters[name].addIncrementTrigger(t)
+      return true
+    }
+    return false
+  }
   set(name: string, value: number) {
     if (this.counters[name]) {
       this.counters[name].set(value)
@@ -70,8 +94,9 @@ export class Counter {
     }
     return undefined
   }
-  reset(node: Node) {
+  trigger(node: Node) {
     Object.values(this.counters).forEach((v) => v.reset(node))
+    Object.values(this.counters).forEach((v) => v.incerement(node))
   }
 }
 
@@ -123,11 +148,44 @@ export const remarkCounter: Plugin<
           }
         })
         parent.children.splice(nodeIdx, 1)
+        return nodeIdx
+      } else if (d.attributes?.increment !== undefined) {
+        // increment 用定義.
+        const parentsLen = parents.length
+        const parent: Parent = parents[parentsLen - 1]
+        const nodeIdx = parent.children.findIndex((n) => n === node)
+        // とりあえず heading のみ対応.
+        let replace: Text | undefined = undefined
+        d.children.forEach((n) => {
+          if (
+            n.type == 'heading' &&
+            n.children.length === 1 &&
+            n.children[0].type === 'textDirective' &&
+            n.children[0].name === directiveName &&
+            n.children[0].attributes?.name
+          ) {
+            const name = n.children[0].attributes.name
+            if (
+              counter.addIncrementTrigger(name, {
+                type: n.type,
+                depth: n.depth
+              }) === false
+            ) {
+              replace = errMessageNotDefined(name)
+            }
+          }
+        })
+        if (replace) {
+          parent.children[nodeIdx] = replace
+          return SKIP
+        }
+        parent.children.splice(nodeIdx, 1)
+        return nodeIdx
       }
     }
 
     const visitor = (node: Node, parents: Parent[]) => {
-      counter.reset(node) // リセットさせる.
+      counter.trigger(node) // リセットとインクリメント.
 
       // visitTest でフィルターしていないのでここで判定する.
       if (
@@ -187,7 +245,7 @@ export const remarkCounter: Plugin<
             return SKIP
           }
           parent.children.splice(nodeIdx, 1)
-          return CONTINUE
+          return nodeIdx
         }
       }
     }
