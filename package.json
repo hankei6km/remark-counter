@@ -1,20 +1,20 @@
 {
-  "name": "@hankei6km/remark-numbers",
+  "name": "@hankei6km/remark-counter",
   "version": "0.1.1",
-  "description": "remark plugin to assign serial numbers",
+  "description": "remark plugin to generate a simple counter.",
   "author": "hankei6km <hankei6km@gmail.com> (https://github.com/hankei6km)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/hankei6km/remark-numbers.git"
+    "url": "git://github.com/hankei6km/remark-counter.git"
   },
   "bugs": {
-    "url": "https://github.com/hankei6km/remark-numbers/issues"
+    "url": "https://github.com/hankei6km/remark-counter/issues"
   },
   "keywords": [
     "remnrk",
     "plugin",
-    "numbers"
+    "counter"
   ],
   "main": "dist/index.js",
   "exports": "./dist/index.js",

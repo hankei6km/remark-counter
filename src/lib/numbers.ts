@@ -42,11 +42,11 @@ export function errMessageNotDefined(name: string): Text {
   }
 }
 
-export const remarkNumbers: Plugin<
+export const remarkCounter: Plugin<
   [RemarkNumbersOptions] | [RemarkNumbersOptions[]] | [],
   string,
   Root
-> = function remarkNumbers(): Transformer {
+> = function remarkCounter(): Transformer {
   // 事前処理(reset などの定義)用.
   const visitTestPre = (node: Node) => {
     if (

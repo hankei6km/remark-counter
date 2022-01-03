@@ -1,13 +1,13 @@
-# remark-numbers
+# remark-counter
 
-remark plugin to assign serial numbers.
+remark plugin to generate a simple counter.
 
 ## Install
 
 npm:
 
 ```
-npm install @hankei6km/remark-numbers
+npm install @hankei6km/remark-counter
 ```
 
 ## Requirement
@@ -23,14 +23,14 @@ import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkStringify from 'remark-stringify'
 import remarkDirective from 'remark-directive'
-import remarkNumbers from '@hankei6km/remark-numbers'
+import remarkCounter from '@hankei6km/remark-counter'
 
 const markdown = readFileSync('test.md').toString()
 
 unified()
   .use(remarkParse)
   .use(remarkDirective)
-  .use(remarkNumbers)
+  .use(remarkCounter)
   .use(remarkStringify)
   .freeze()
   .process(markdown, (err, file) => {
@@ -41,37 +41,6 @@ unified()
   })
 
 ```
-
-### Definition / Reference
-
-input:
-```markdown
-# test
-
-![Charlie](/images/photo-charlie.png)
-*Photo :num{name="charlie" define}*
-
-![Don](/images/photo-don.png)
-*Photo :num{name="don" define}*
-
-Charlie(Photo :num{name="charlie"}) and Don(Photo :num{name="don"})
-```
-
-yield:
-```markdown
-# test
-
-![Charlie](/images/photo-charlie.png)
-*Photo 1*
-
-![Don](/images/photo-don.png)
-*Photo 2*
-
-Charlie(Photo 1) and Don(Photo 2)
-
-```
-
-### Counter
 
 input:
 ```markdown
@@ -109,29 +78,23 @@ yield:
 
 ## Writing
 
-### Definition / Reference
-
-- Definition - `:num{name="variable-name" define}`
-- Reference - `:num{name="variable-name"}`
-
-### Counter
 
 - Reset - `:num{name="variable-name" reset}`
 - Up - `:num{name="variable-name" up}`
-- Look - `:num{name="variable-name" look}`
+- Look - `:num{name="variable-name"}`
 
 
 ## CLI
 
-[`remark-cli`](https://github.com/remarkjs/remark/tree/main/packages/remark-cli) is required `remark-numbers` to run as command.
+[`remark-cli`](https://github.com/remarkjs/remark/tree/main/packages/remark-cli) is required `remark-counter` to run as command.
 
 ### Install
 
 ```console
-$ mkdir numbers
-$ cd numbers
+$ mkdir counter
+$ cd counter
 $ npm init -y
-$ npm install remark-cli remark-directive remark-frontmatter remark-gfm @hankei6km/remark-numbers
+$ npm install remark-cli remark-directive remark-frontmatter remark-gfm @hankei6km/remark-counter
 ```
 
 ### Config
@@ -141,14 +104,14 @@ $ npm install remark-cli remark-directive remark-frontmatter remark-gfm @hankei6
 import remarkDirective from 'remark-directive'
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm'
-import remarkNumbers from '@hankei6km/remark-numbers'
+import remarkCounter from '@hankei6km/remark-counter'
 
 const remarkConfig = {
   plugins: [
     remarkDirective,
     remarkFrontmatter,
     remarkGfm,
-    remarkNumbers
+    remarkCounter
   ]
 }
 

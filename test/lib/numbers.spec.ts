@@ -5,7 +5,7 @@ import remarkStringify from 'remark-stringify'
 import remarkDirective from 'remark-directive'
 import {
   DefineCounter,
-  remarkNumbers,
+  remarkCounter,
   RemarkNumbersOptions
 } from '../../src/lib/numbers'
 
@@ -36,7 +36,7 @@ describe('remarkNumbers()', () => {
       unified()
         .use(remarkParse)
         .use(remarkDirective)
-        .use(remarkNumbers)
+        .use(remarkCounter)
         .use(remarkStringify)
         .freeze()
         .process(html, (err, file) => {
