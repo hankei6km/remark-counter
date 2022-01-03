@@ -1,2 +1,2 @@
-import { remarkCounter } from './lib/numbers.js'
+import { remarkCounter } from './lib/counter.js'
 export default remarkCounter
