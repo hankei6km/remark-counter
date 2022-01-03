@@ -132,9 +132,17 @@ export const remarkCounter: Plugin<
         const parentsLen = parents.length
         const parent: Parent = parents[parentsLen - 1]
         const nodeIdx = parent.children.findIndex((n) => n === node)
-        // とりあえず heading のみ対応.
+        // とりあえず paragraph と heading のみ対応.
         d.children.forEach((n) => {
           if (
+            n.type == 'paragraph' &&
+            n.children.length === 1 &&
+            n.children[0].type === 'textDirective' &&
+            n.children[0].name === directiveName &&
+            n.children[0].attributes?.name
+          ) {
+            counter.define(n.children[0].attributes?.name)
+          } else if (
             n.type == 'heading' &&
             n.children.length === 1 &&
             n.children[0].type === 'textDirective' &&

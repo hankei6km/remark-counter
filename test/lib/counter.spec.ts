@@ -157,13 +157,6 @@ describe('remarkNumbers()', () => {
       )
     ).toEqual('# test\n\n\n\n\n1\n\n1\n\n2\n\n3\n\n2\n')
   })
-  it('should increment the value by "up"', async () => {
-    expect(
-      await f(
-        '# test\n\n:cnt{name="fig" reset}\n\n:cnt{name="fig" up}\n\n:cnt{name="fig" up}\n'
-      )
-    ).toEqual('# test\n\n\n\n1\n\n2\n')
-  })
   it('should reset by reset container', async () => {
     expect(
       await f(
@@ -176,9 +169,25 @@ describe('remarkNumbers()', () => {
   it('should increment values by increment container', async () => {
     expect(
       await f(
-        '# test\n\n:::cnt{reset}\n# :cnt{name="chapter"}\n:::\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n\n## test 1\n\n:cnt{name="chapter"}\n\n### test1-1\n\n:cnt{name="chapter"}\n\n## test2\n\n:cnt{name="chapter"}\n'
+        '# test\n\n:::cnt{reset}\n:cnt{name="chapter"}\n:::\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n\n## test 1\n\n:cnt{name="chapter"}\n\n### test1-1\n\n:cnt{name="chapter"}\n\n## test2\n\n:cnt{name="chapter"}\n'
       )
     ).toEqual('# test\n\n## test 1\n\n1\n\n### test1-1\n\n1\n\n## test2\n\n2\n')
+  })
+  it('should set values by "reset"', async () => {
+    expect(
+      await f(
+        '# test\n\n:::cnt{reset}\n:cnt{name="chapter"}\n:::\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n:cnt{name="chapter" reset=10}\n\n## test 1\n\n:cnt{name="chapter"}\n\n### test1-1\n\n:cnt{name="chapter"}\n\n## test2\n\n:cnt{name="chapter"}\n'
+      )
+    ).toEqual(
+      '# test\n\n\n\n## test 1\n\n11\n\n### test1-1\n\n11\n\n## test2\n\n12\n'
+    )
+  })
+  it('should increment the value by "up"', async () => {
+    expect(
+      await f(
+        '# test\n\n:cnt{name="fig" reset}\n\n:cnt{name="fig" up}\n\n:cnt{name="fig" up}\n'
+      )
+    ).toEqual('# test\n\n\n\n1\n\n2\n')
   })
   it('should lookup variable', async () => {
     expect(
