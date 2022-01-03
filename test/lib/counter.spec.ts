@@ -7,7 +7,7 @@ import {
   DefineCounter,
   remarkCounter,
   RemarkNumbersOptions
-} from '../../src/lib/numbers'
+} from '../../src/lib/counter'
 
 describe('DefineCounter', () => {
   it('should count up counter', async () => {
