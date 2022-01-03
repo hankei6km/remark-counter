@@ -17,7 +17,7 @@ describe('DefineCounter', () => {
     expect(counter.up()).toEqual(2)
     expect(counter.look()).toEqual(2)
   })
-  it('should reset counter', async () => {
+  it('should reset counter by node', async () => {
     const counter = new SimpleCounter()
     counter.addResetTrigger({ type: 'heading', depth: 2 })
     expect(counter.up()).toEqual(1)
@@ -25,6 +25,19 @@ describe('DefineCounter', () => {
     expect(counter.up()).toEqual(1)
     expect(counter.reset({ type: 'heading', depth: 3 } as Node)).toBeFalsy()
     expect(counter.up()).toEqual(2)
+  })
+  it('should increment counter by node', async () => {
+    const counter = new SimpleCounter()
+    counter.addIncrementTrigger({ type: 'heading', depth: 2 })
+    expect(counter.look()).toEqual(0)
+    expect(
+      counter.incerement({ type: 'heading', depth: 2 } as Node)
+    ).toBeTruthy()
+    expect(counter.look()).toEqual(1)
+    expect(
+      counter.incerement({ type: 'heading', depth: 3 } as Node)
+    ).toBeFalsy()
+    expect(counter.look()).toEqual(1)
   })
 })
 
@@ -47,7 +60,7 @@ describe('Counter', () => {
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(1)
   })
-  it('should reset counter', async () => {
+  it('should reset counter by node', async () => {
     const numbers = new Counter()
     numbers.define('foo', { type: 'heading', depth: 2 })
     numbers.define('bar', { type: 'heading', depth: 3 })
@@ -57,16 +70,54 @@ describe('Counter', () => {
     numbers.up('bar')
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(1)
-    numbers.reset({ type: 'heading', depth: 2 } as Node)
+    numbers.trigger({ type: 'heading', depth: 2 } as Node)
     expect(numbers.look('foo')).toEqual(0)
     expect(numbers.look('bar')).toEqual(1)
     numbers.up('foo')
     numbers.up('bar')
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(2)
-    numbers.reset({ type: 'heading', depth: 3 } as Node)
+    numbers.trigger({ type: 'heading', depth: 3 } as Node)
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(0)
+  })
+  it('should increment counter by node', async () => {
+    const numbers = new Counter()
+    numbers.define('foo')
+    numbers.define('bar')
+    numbers.addIncrementTrigger('foo', { type: 'heading', depth: 2 })
+    numbers.addIncrementTrigger('bar', { type: 'heading', depth: 3 })
+    expect(numbers.look('foo')).toEqual(0)
+    expect(numbers.look('bar')).toEqual(0)
+    numbers.trigger({ type: 'heading', depth: 2 } as Node)
+    expect(numbers.look('foo')).toEqual(1)
+    expect(numbers.look('bar')).toEqual(0)
+    numbers.trigger({ type: 'heading', depth: 3 } as Node)
+    expect(numbers.look('foo')).toEqual(1)
+    expect(numbers.look('bar')).toEqual(1)
+  })
+  it('should reset and increment counter by node', async () => {
+    const numbers = new Counter()
+    numbers.define('foo', { type: 'heading', depth: 2 })
+    numbers.define('bar', { type: 'heading', depth: 3 })
+    numbers.addIncrementTrigger('foo', { type: 'heading', depth: 2 })
+    numbers.addIncrementTrigger('bar', { type: 'heading', depth: 3 })
+    numbers.up('foo')
+    numbers.up('bar')
+    numbers.up('foo')
+    numbers.up('bar')
+    expect(numbers.look('foo')).toEqual(2)
+    expect(numbers.look('bar')).toEqual(2)
+    numbers.trigger({ type: 'heading', depth: 2 } as Node)
+    expect(numbers.look('foo')).toEqual(1)
+    expect(numbers.look('bar')).toEqual(2)
+    numbers.up('foo')
+    numbers.up('bar')
+    expect(numbers.look('foo')).toEqual(2)
+    expect(numbers.look('bar')).toEqual(3)
+    numbers.trigger({ type: 'heading', depth: 3 } as Node)
+    expect(numbers.look('foo')).toEqual(2)
+    expect(numbers.look('bar')).toEqual(1)
   })
 })
 
@@ -122,6 +173,13 @@ describe('remarkNumbers()', () => {
       '# test\n\n## head2-1\n\n11\n\n### head3-1\n\n21\n\n## head2-2\n\n11\n'
     )
   })
+  it('should increment values by increment container', async () => {
+    expect(
+      await f(
+        '# test\n\n:::cnt{reset}\n# :cnt{name="chapter"}\n:::\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n\n## test 1\n\n:cnt{name="chapter"}\n\n### test1-1\n\n:cnt{name="chapter"}\n\n## test2\n\n:cnt{name="chapter"}\n'
+      )
+    ).toEqual('# test\n\n## test 1\n\n1\n\n### test1-1\n\n1\n\n## test2\n\n2\n')
+  })
   it('should lookup variable', async () => {
     expect(
       await f(
@@ -136,6 +194,13 @@ describe('remarkNumbers()', () => {
       )
     ).toEqual(
       '# test\n\n\n\ns1(ReferenceError: "bar" is not defined)s2\n\ns3(ReferenceError: "car" is not defined)s4\n\ns5(ReferenceError: "baz" is not defined)s6\n\n1\n'
+    )
+    expect(
+      await f(
+        '# test\n\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n## test1\n'
+      )
+    ).toEqual(
+      '# test\n\n(ReferenceError: "chapter" is not defined)\n\n## test1\n'
     )
   })
   it('should escape varble name in error message', async () => {
