@@ -21,21 +21,47 @@ describe('DefineCounter', () => {
     const counter = new SimpleCounter()
     counter.addResetTrigger({ type: 'heading', depth: 2 })
     expect(counter.up()).toEqual(1)
-    expect(counter.reset({ type: 'heading', depth: 2 } as Node)).toBeTruthy()
+    expect(
+      counter.reset({ type: 'heading', depth: 2 } as Node, [
+        { type: 'root', children: [] }
+      ])
+    ).toBeTruthy()
     expect(counter.up()).toEqual(1)
-    expect(counter.reset({ type: 'heading', depth: 3 } as Node)).toBeFalsy()
+    expect(
+      counter.reset({ type: 'heading', depth: 2 } as Node, [
+        { type: 'root', children: [] },
+        { type: 'containerDirective', children: [] }
+      ])
+    ).toBeFalsy()
     expect(counter.up()).toEqual(2)
+    expect(
+      counter.reset({ type: 'heading', depth: 3 } as Node, [
+        { type: 'root', children: [] }
+      ])
+    ).toBeFalsy()
+    expect(counter.up()).toEqual(3)
   })
   it('should increment counter by node', async () => {
     const counter = new SimpleCounter()
     counter.addIncrementTrigger({ type: 'heading', depth: 2 })
     expect(counter.look()).toEqual(0)
     expect(
-      counter.incerement({ type: 'heading', depth: 2 } as Node)
+      counter.incerement({ type: 'heading', depth: 2 } as Node, [
+        { type: 'root', children: [] }
+      ])
     ).toBeTruthy()
     expect(counter.look()).toEqual(1)
     expect(
-      counter.incerement({ type: 'heading', depth: 3 } as Node)
+      counter.incerement({ type: 'heading', depth: 2 } as Node, [
+        { type: 'root', children: [] },
+        { type: 'containerDirective', children: [] }
+      ])
+    ).toBeFalsy()
+    expect(counter.look()).toEqual(1)
+    expect(
+      counter.incerement({ type: 'heading', depth: 3 } as Node, [
+        { type: 'root', children: [] }
+      ])
     ).toBeFalsy()
     expect(counter.look()).toEqual(1)
   })
@@ -70,14 +96,18 @@ describe('Counter', () => {
     numbers.up('bar')
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(1)
-    numbers.trigger({ type: 'heading', depth: 2 } as Node)
+    numbers.trigger({ type: 'heading', depth: 2 } as Node, [
+      { type: 'root', children: [] }
+    ])
     expect(numbers.look('foo')).toEqual(0)
     expect(numbers.look('bar')).toEqual(1)
     numbers.up('foo')
     numbers.up('bar')
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(2)
-    numbers.trigger({ type: 'heading', depth: 3 } as Node)
+    numbers.trigger({ type: 'heading', depth: 3 } as Node, [
+      { type: 'root', children: [] }
+    ])
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(0)
   })
@@ -89,10 +119,14 @@ describe('Counter', () => {
     numbers.addIncrementTrigger('bar', { type: 'heading', depth: 3 })
     expect(numbers.look('foo')).toEqual(0)
     expect(numbers.look('bar')).toEqual(0)
-    numbers.trigger({ type: 'heading', depth: 2 } as Node)
+    numbers.trigger({ type: 'heading', depth: 2 } as Node, [
+      { type: 'root', children: [] }
+    ])
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(0)
-    numbers.trigger({ type: 'heading', depth: 3 } as Node)
+    numbers.trigger({ type: 'heading', depth: 3 } as Node, [
+      { type: 'root', children: [] }
+    ])
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(1)
   })
@@ -108,14 +142,18 @@ describe('Counter', () => {
     numbers.up('bar')
     expect(numbers.look('foo')).toEqual(2)
     expect(numbers.look('bar')).toEqual(2)
-    numbers.trigger({ type: 'heading', depth: 2 } as Node)
+    numbers.trigger({ type: 'heading', depth: 2 } as Node, [
+      { type: 'root', children: [] }
+    ])
     expect(numbers.look('foo')).toEqual(1)
     expect(numbers.look('bar')).toEqual(2)
     numbers.up('foo')
     numbers.up('bar')
     expect(numbers.look('foo')).toEqual(2)
     expect(numbers.look('bar')).toEqual(3)
-    numbers.trigger({ type: 'heading', depth: 3 } as Node)
+    numbers.trigger({ type: 'heading', depth: 3 } as Node, [
+      { type: 'root', children: [] }
+    ])
     expect(numbers.look('foo')).toEqual(2)
     expect(numbers.look('bar')).toEqual(1)
   })
@@ -172,6 +210,15 @@ describe('remarkNumbers()', () => {
         '# test\n\n:::cnt{reset}\n:cnt{name="chapter"}\n:::\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n\n## test 1\n\n:cnt{name="chapter"}\n\n### test1-1\n\n:cnt{name="chapter"}\n\n## test2\n\n:cnt{name="chapter"}\n'
       )
     ).toEqual('# test\n\n## test 1\n\n1\n\n### test1-1\n\n1\n\n## test2\n\n2\n')
+  })
+  it('should skip incremental by deeper heading', async () => {
+    expect(
+      await f(
+        '# test\n\n:::cnt{reset}\n:cnt{name="chapter"}\n:::\n:::cnt{increment}\n## :cnt{name="chapter"}\n:::\n:::num{reset}\n## :num\n:::\n## test 1\n\n:cnt{name="chapter"}\n\n### test1-1\n\n:cnt{name="chapter"}\n\n## test2\n\n:cnt{name="chapter"}\n'
+      )
+    ).toEqual(
+      '# test\n\n:::num{reset}\n## :num\n:::\n\n## test 1\n\n1\n\n### test1-1\n\n1\n\n## test2\n\n2\n'
+    )
   })
   it('should set values by "reset"', async () => {
     expect(
