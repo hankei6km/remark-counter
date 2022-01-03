@@ -28,8 +28,9 @@ export class SimpleCounter {
   set(value: number) {
     this.counter = value
   }
-  reset(node: Node): boolean {
+  reset(node: Node, parents: Parent[]): boolean {
     if (
+      parents.length === 1 &&
       this.resetTrigger.findIndex(
         ({ type, depth }) => type === node.type && depth === (node as any).depth
       ) >= 0
@@ -39,8 +40,9 @@ export class SimpleCounter {
     }
     return false
   }
-  incerement(node: Node): boolean {
+  incerement(node: Node, parents: Parent[]): boolean {
     if (
+      parents.length === 1 &&
       this.incrementTrigger.findIndex(
         ({ type, depth }) => type === node.type && depth === (node as any).depth
       ) >= 0
@@ -94,9 +96,9 @@ export class Counter {
     }
     return undefined
   }
-  trigger(node: Node) {
-    Object.values(this.counters).forEach((v) => v.reset(node))
-    Object.values(this.counters).forEach((v) => v.incerement(node))
+  trigger(node: Node, parents: Parent[]) {
+    Object.values(this.counters).forEach((v) => v.reset(node, parents))
+    Object.values(this.counters).forEach((v) => v.incerement(node, parents))
   }
 }
 
@@ -193,7 +195,7 @@ export const remarkCounter: Plugin<
     }
 
     const visitor = (node: Node, parents: Parent[]) => {
-      counter.trigger(node) // リセットとインクリメント.
+      counter.trigger(node, parents) // リセットとインクリメント.
 
       // visitTest でフィルターしていないのでここで判定する.
       if (
